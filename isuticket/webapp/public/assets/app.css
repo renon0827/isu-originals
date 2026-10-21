@@ -1,0 +1,24 @@
+:root { --bg: #f7f5f2; --fg: #1d1b19; --muted: #6b665f; --accent: #c2410c; --card: #fff; --line: #e4dfd8; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #171513; --fg: #f1ede8; --muted: #a39d95; --accent: #fb923c; --card: #22201d; --line: #36322e; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.logo { font-weight: 800; color: var(--accent); text-decoration: none; letter-spacing: .05em; }
+nav { display: flex; flex-wrap: wrap; gap: 12px; }
+nav a { color: var(--fg); text-decoration: none; }
+main { max-width: 960px; margin: 0 auto; padding: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.card .body { padding: 12px; }
+.muted { color: var(--muted); font-size: .9em; }
+.ranks { display: flex; gap: 8px; margin-top: 8px; font-size: .85em; }
+.seatmap { display: grid; gap: 2px; margin: 8px 0 16px; }
+.seat { width: 10px; height: 10px; border-radius: 2px; background: #16a34a; }
+.seat.sold { background: var(--line); }
+.seat.mine { background: var(--accent); }
+form { display: grid; gap: 8px; max-width: 320px; }
+input, button { font: inherit; padding: 8px; }
+button { background: var(--accent); color: #fff; border: 0; border-radius: 6px; cursor: pointer; }

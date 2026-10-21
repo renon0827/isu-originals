@@ -1,0 +1,79 @@
+# ローカル開発・検証用の環境。
+# app1 相当（mysql + app + nginx）を CPU 制限つきで再現し、bench から負荷をかける。
+#
+#   docker compose up -d mysql
+#   docker compose --profile setup run --rm setup   # 初回のみ: 初期データ投入
+#   docker compose up -d app nginx
+#   docker compose --profile bench run --rm bench
+name: isuauction
+
+x-go: &go
+  build: { context: ., dockerfile: Dockerfile.app }
+  image: isuauction-dev-go
+  volumes:
+    - ..:/isuauction
+    - gocache:/root/.cache
+    - gomod:/go/pkg/mod
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: isucon
+      MYSQL_PASSWORD: isucon
+    volumes:
+      - ../provisioning/mysql/isuauction.cnf:/etc/mysql/conf.d/isuauction.cnf:ro
+      - mysql:/var/lib/mysql
+    cpus: 1.0
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot", "--silent"]
+      interval: 3s
+      retries: 40
+
+  setup:
+    <<: *go
+    profiles: ["setup"]
+    depends_on: { mysql: { condition: service_healthy } }
+    working_dir: /isuauction
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        until mysql -hmysql -uroot -proot -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done
+        mysql -hmysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS isuauction; CREATE DATABASE IF NOT EXISTS isuauction_init; GRANT ALL ON isuauction.* TO 'isucon'@'%'; GRANT ALL ON isuauction_init.* TO 'isucon'@'%';"
+        provisioning/load-data.sh /isuauction -hmysql -uroot -proot
+        echo setup done
+
+  app:
+    <<: *go
+    depends_on: { mysql: { condition: service_healthy } }
+    working_dir: /isuauction/webapp/go
+    environment:
+      ISUAUCTION_DB_HOST: mysql
+      ISUAUCTION_PUBLIC_DIR: /isuauction/webapp/public
+    command: bash -c "go build -o /tmp/isuauction . && exec /tmp/isuauction"
+    cpus: 1.0
+    mem_limit: 1g
+
+  nginx:
+    image: nginx:1.27
+    depends_on: [app]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports: ["28080:80"]
+    cpus: 0.5
+
+  bench:
+    <<: *go
+    profiles: ["bench"]
+    working_dir: /isuauction/bench
+    entrypoint: ["bash", "-c", "go build -o /tmp/bench . && exec /tmp/bench -target http://nginx \"$$@\"", "--"]
+    cpus: 4.0
+
+volumes:
+  mysql:
+  gocache:
+  gomod:

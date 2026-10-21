@@ -1,0 +1,15 @@
+[Unit]
+Description=ISUFACTORY (Go)
+After=network.target mysql.service
+
+[Service]
+User=isucon
+Group=isucon
+WorkingDirectory=/home/isucon/webapp/go
+EnvironmentFile=/home/isucon/env.sh
+ExecStart=/home/isucon/webapp/go/isufactory
+Restart=always
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

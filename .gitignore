@@ -1,0 +1,28 @@
+# --- 鍵・設定 ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+**/keys/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+credentials*
+secrets*
+
+# --- 生成物 ---
+# 初期データのダンプ
+**/initial-data/*.sql
+**/initial-data/*.sql.gz
+**/initial-data/*.tsv
+*.log
+bin/
+dist/
+node_modules/
+.DS_Store
